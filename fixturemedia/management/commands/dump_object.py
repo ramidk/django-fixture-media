@@ -1,23 +1,35 @@
-from optparse import make_option
 import os
-from os.path import abspath, dirname, exists, join
+from os.path import abspath
+from os.path import dirname
+from os.path import exists
+from os.path import join
 
-from django.core.management.base import CommandError
 import django.core.management.commands.dumpdata
 import django.core.serializers
-from django.db.models.fields.files import FileField
 import django.dispatch
-from django.core.files.storage import default_storage
 from django.core.files.base import File
+from django.core.files.storage import default_storage
+from django.core.management.base import CommandError
+from django.db.models.fields.files import FileField
+
+try:
+    from fixture_magic.management.commands.dump_object import \
+        Command as MagicCommand
+except ImportError as e:
+    raise ImportError('`django-fixture-magic` is required! '
+                      'Run: `pip install django-fixture-magic`')
 
 from fixturemedia.management.commands.loaddata import models_with_filefields
-
 
 pre_dump = django.dispatch.Signal(providing_args=('instance',))
 
 
-class Command(django.core.management.commands.dumpdata.Command):
-
+class Command(MagicCommand):
+    """Wrapper for django-fixture-magic `manage.py dump_object` command.
+    Dumps media files to:
+        app_name/fixtures/media
+    So they are restored on `manage.py loaddata` command call.
+    """
     def add_arguments(self, parser):
         super().add_arguments(parser)
         parser.add_argument(
@@ -66,9 +78,9 @@ class Command(django.core.management.commands.dumpdata.Command):
         Deserializer = super_deserializer
 
         django.core.serializers.register_serializer(ser_format,
-             'fixturemedia.management.commands.dumpdata')
+             'fixturemedia.management.commands.dump_object')
 
-    def handle(self, *app_labels, **options):
+    def handle(self, *args, **options):
         ser_format = options.get('format')
 
         outfilename = options.get('outfile')
@@ -82,4 +94,4 @@ class Command(django.core.management.commands.dumpdata.Command):
         self.set_up_serializer(ser_format)
 
         with File(open(outfilename, 'w')) as self.stdout:
-            super(Command, self).handle(*app_labels, **options)
+            super(Command, self).handle(*args, **options)
