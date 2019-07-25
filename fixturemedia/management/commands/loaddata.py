@@ -18,7 +18,6 @@ def models_with_filefields():
 
 
 class Command(django.core.management.commands.loaddata.Command):
-
     def load_images_for_signal(self, sender, **kwargs):
         fixture_paths = self.fixture_dirs
         fixture_paths = (join(path, 'media') for path in fixture_paths)
@@ -36,6 +35,7 @@ class Command(django.core.management.commands.loaddata.Command):
                 filepath = join(fixture_path, path.name)
                 try:
                     with open(filepath, 'rb') as f:
+                        field.storage.delete(path.name)
                         field.storage.save(path.name, f)
                 except file_not_found_error:
                     self.stderr.write("Expected file at {} doesn't exist, skipping".format(filepath))

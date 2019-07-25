@@ -3,7 +3,7 @@ from distutils.core import setup
 
 setup(
     name='django-fixture-media',
-    version='1.1.1',
+    version='1.1.2',
     description='load/dump Django model fixtures with their media files',
     packages=['fixturemedia', 'fixturemedia.management', 'fixturemedia.management.commands'],
 
